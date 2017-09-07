@@ -50,6 +50,8 @@ public class MySQLReplicatSet {
 		this.name = repBean.getName();
 		this.writeIndex = curWriteIndex;
 		final List<MySQLBean> mysqlBeans = repBean.getMysqls();
+		this.repType = repBean.getType();
+		this.switchType = repBean.getSwitchType();
 		dhSources = new MySQLDataSource[mysqlBeans.size()];
 		for (int i = 0; i < dhSources.length; i++) {
 			dhSources[i] = new MySQLDataSource(mysqlBeans.get(i), writeIndex != i);
@@ -91,7 +93,7 @@ public class MySQLReplicatSet {
 	 * @return DHSource
 	 */
 	public MySQLDataSource getLBReadDH() {
-		return dhSources[ThreadLocalRandom.current().nextInt() / dhSources.length];
+		return dhSources[ThreadLocalRandom.current().nextInt() % dhSources.length];
 	}
 
 	@Override

@@ -27,6 +27,18 @@ public class ProxyReactorThread<T extends Session> extends Thread {
 	protected ConcurrentLinkedQueue<Runnable> pendingJobs = new ConcurrentLinkedQueue<Runnable>();
 	protected ArrayList<T> allSessions = new ArrayList<T>();
 
+	public Selector getSelector() {
+		return selector;
+	}
+
+	public BufferPool getBufPool() {
+		return bufPool;
+	}
+
+	public ArrayList<T> getAllSessions() {
+		return allSessions;
+	}
+
 	@SuppressWarnings("unchecked")
 	public ProxyReactorThread(BufferPool bufPool) throws IOException {
 		this.bufPool = bufPool;
