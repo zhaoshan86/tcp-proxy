@@ -1,56 +1,33 @@
 package io.mycat.proxy;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
-import io.mycat.mycat2.MycatConfig;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 代理的配置信息
- * 
+ *
  * @author wuzhihui
  *
  */
 public class ProxyConfig {
 	// 绑定的数据传输IP地址
-	private String bindIP;
+	private String bindIP = "0.0.0.0";
 	// 绑定的数据传输端口
-	private int bindPort;
+	private int bindPort = 8066;
+	private boolean clusterEnable = false;
 	// 集群通信绑定的IP地址
 	private String clusterIP = "0.0.0.0";
 	// 集群通信绑定的端口
 	private int clusterPort = 9066;
-	private boolean clusterEnable = false;
 	private String myNodeId;
 	// 逗号分隔的所有集群节点的ID:IP:Port信息，如
 	// leader-1:127.0.0.1:9066,leader-2:127.0.0.1:9068,leader-3:127.0.0.1:9069
 	private String allNodeInfs;
-	// 当前节点所用的配置文件的版本（节点自身的基础配置信息，如绑定的IP地址，端口以及其他只针对自身节点的配置变动不影响配置文件版本，设计的时候，分开两种配置文件）
-	private String myConfigFileVersion="1.0";
+	// 当前节点所用的配置文件的版本
+	private Map<Byte, Integer> configVersionMap = new HashMap<>();
+	private Map<Byte, Object> configMap = new HashMap<>();
 
-	public static MycatConfig loadFromProperties(InputStream in) throws IOException {
-		try
-		{
-		MycatConfig conf = new MycatConfig();
-		Properties pros = new Properties();
-		pros.load(in);
-		conf.setBindIP(pros.getProperty("bindip", "0.0.0.0"));
-		conf.setBindPort(Integer.valueOf(pros.getProperty("bindport", "8066")));
-		conf.setClusterIP(pros.getProperty("cluster.ip"));
-		conf.setClusterPort(Integer.valueOf(pros.getProperty("cluster.port", "9066")));
-		conf.setClusterEnable(Boolean.valueOf(pros.getProperty("cluster.enabled", "false")));
-		conf.setMyNodeId(pros.getProperty("cluster.myid"));
-		conf.setAllNodeInfs(pros.getProperty("cluster.allnodes"));
-		return conf;
-		}finally
-		{
-			if(in!=null)
-			{
-				in.close();
-			}
-		}
-	}
+	public ProxyConfig() {}
 
 	public String getBindIP() {
 		return bindIP;
@@ -108,12 +85,22 @@ public class ProxyConfig {
 		this.clusterPort = clusterPort;
 	}
 
-	public String getMyConfigFileVersion() {
-		return myConfigFileVersion;
+	public Map<Byte, Integer> getConfigVersionMap() {
+		return configVersionMap;
 	}
 
-	public void setMyConfigFileVersion(String myConfigFileVersion) {
-		this.myConfigFileVersion = myConfigFileVersion;
+	public int getConfigVersion(byte configKey) {
+		Integer oldVersion = configVersionMap.get(configKey);
+		return oldVersion == null ? ConfigEnum.INIT_VERSION : oldVersion;
 	}
 
+	public Object getConfig(byte configKey) {
+		return configMap.get(configKey);
+	}
+
+	public void putConfig(byte configKey, Object config, Integer version) {
+		configMap.put(configKey, config);
+		version = version == null ? ConfigEnum.INIT_VERSION : version;
+		configVersionMap.put(configKey, version);
+	}
 }

@@ -46,7 +46,15 @@ public class ComQuitCmd implements MySQLCommand{
 	}
 
 	@Override
-	public void clearResouces(boolean sessionCLosed) {
+	public void clearFrontResouces(MycatSession session, boolean sessionCLosed) {
+		if(sessionCLosed){
+			session.bufPool.recycleBuf(session.getProxyBuffer().getBuffer());
+			session.unbindAllBackend();
+		}
+	}
+
+	@Override
+	public void clearBackendResouces(MySQLSession session, boolean sessionCLosed) {
 		// TODO Auto-generated method stub
 		
 	}

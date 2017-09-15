@@ -11,12 +11,7 @@ import io.mycat.mycat2.MyCommand;
 import io.mycat.mycat2.MySQLSession;
 import io.mycat.mycat2.MycatSession;
 
-import io.mycat.mycat2.SQLCommand;
-import io.mycat.mycat2.beans.MySQLDataSource;
 import io.mycat.mycat2.console.SessionKeyEnum;
-import io.mycat.mycat2.tasks.BackendConCreateTask;
-import io.mycat.mycat2.tasks.BackendSynchronzationTask;
-import io.mycat.mysql.packet.ErrorPacket;
 
 import io.mycat.proxy.NIOHandler;
 import io.mycat.proxy.ProxyBuffer;
@@ -59,8 +54,8 @@ public class DefaultMycatSessionHandler implements NIOHandler<AbstractMySQLSessi
 		if(myCommand!=null){
 			session.curSQLCommand = myCommand;
 			// 如果当前包需要处理，则交给对应方法处理，否则直接透传
-			if (session.curSQLCommand.procssSQL(session)) {
-				session.curSQLCommand.clearResouces(false);
+			if(session.curSQLCommand.procssSQL(session)){
+				session.curSQLCommand.clearFrontResouces(session, false);
 			}
 		}else{
 			logger.error(" current packageTyps is not support,please fix it!!! the packageType is {} ",session.curMSQLPackgInf);
@@ -72,7 +67,7 @@ public class DefaultMycatSessionHandler implements NIOHandler<AbstractMySQLSessi
 		// 交给SQLComand去处理
 		MyCommand curCmd = session.getMycatSession().curSQLCommand;
 		if (curCmd.onBackendResponse(session)) {
-			curCmd.clearResouces(false);
+			curCmd.clearBackendResouces((MySQLSession) session,false);
 		}
 
 	}
@@ -115,15 +110,14 @@ public class DefaultMycatSessionHandler implements NIOHandler<AbstractMySQLSessi
 		if (session instanceof MycatSession) {
 			MycatSession mycatSs = (MycatSession) session;
 			if (mycatSs.curSQLCommand.onFrontWriteFinished(mycatSs)) {
-				mycatSs.curSQLCommand.clearResouces(false);
+				mycatSs.curSQLCommand.clearFrontResouces(mycatSs,false);
 			}
 		} else {
 			MycatSession mycatSs = ((MySQLSession) session).getMycatSession();
 			if (mycatSs.curSQLCommand.onBackendWriteFinished((MySQLSession) session)) {
-				mycatSs.curSQLCommand.clearResouces(false);
+				mycatSs.curSQLCommand.clearBackendResouces((MySQLSession) session,false);
 			}
 		}
-
 	}
 
 }
